@@ -22,7 +22,7 @@ object MovieLensAnalysis {
     val dataFile = sc.textFile(pathFile, 2).cache()
     println(dataFile.count() + " <-- number of ratings")
     println("----------------------")
-    
+    val movieLensHomeDir = "s3n://saltin1/input/ampcamp/movielens/large"
     val ratings = sc.textFile(movieLensHomeDir + "/ratings.dat").map { line =>
     val fields = line.split("::")
     // format: (timestamp % 10, Rating(userId, movieId, rating))
