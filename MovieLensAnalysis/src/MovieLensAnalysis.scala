@@ -71,6 +71,7 @@ object MovieLensAnalysis {
          map(x => (x._2._1._1, (x._1, x._2._1._1, x._2._1._2, x._2._2) ) ).
          sortByKey(false,2).
          filter(x => x._2._3>500). /* collect ? */
+         map(x => x._2).
          take(100).foreach(println)          
   
 
