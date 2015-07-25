@@ -44,7 +44,15 @@ object MovieLensAnalysis {
       }
       
      //take 10
-     ratings.map( x => (x._2.product, 1)).reduceByKey(_+_).map(x=> (x._2, x._1)).map(x=> (x._2, x._1)).leftOuterJoin(moviesRDD).sortByKey(true,2).take(10).foreach(println)
+     ratings
+       .map( x => (x._2.product, 1))
+       .reduceByKey(_+_)
+       .map(x=> (x._2, x._1))
+       .map(x=> (x._2, x._1))
+       .leftOuterJoin(moviesRDD)
+       .sortByKey(true,2)
+       .take(10)
+       .foreach(println)
     
     
 
