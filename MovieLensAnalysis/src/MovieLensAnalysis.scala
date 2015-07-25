@@ -10,10 +10,14 @@ import org.apache.spark.mllib.recommendation.{ALS, Rating, MatrixFactorizationMo
 object MovieLensAnalysis {
 
   def main(args: Array[String]) {
-
+    val sparkHome = "/root/spark"
+    val master = Source.fromFile("/root/spark-ec2/cluster-url").mkString.trim
+    val masterHostname = Source.fromFile("/root/spark-ec2/masters").mkString.trim    
     val conf = new SparkConf()
       .setAppName("Movielens Analysis")
       .set("spark.executor.memory", "6g")
+      .setMaster(master)
+      .setSparkHome(sparkHome)
     val sc = new SparkContext(conf)
     val hadoopConf=sc.hadoopConfiguration
     hadoopConf.set("fs.s3.impl", "org.apache.hadoop.fs.s3native.NativeS3FileSystem")
