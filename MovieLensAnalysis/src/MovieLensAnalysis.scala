@@ -27,8 +27,8 @@ object MovieLensAnalysis {
 
     val pathFile = "s3n://saltin1/input/ampcamp/movielens/large/ratings.dat"
     val dataFile = sc.textFile(pathFile, 2).cache()
-    println(dataFile.count() + " <-- number of ratings")
-    println("----------------------")
+    //println(dataFile.count() + " <-- number of ratings")
+    //println("----------------------")
     val movieLensHomeDir = "s3n://saltin1/input/ampcamp/movielens/large"
     val ratings = sc.textFile(movieLensHomeDir + "/ratings.dat").cache.map { line =>
     val fields = line.split("::")
@@ -44,17 +44,35 @@ object MovieLensAnalysis {
       }
       
      //take 10
-     ratings
-       .map( x => (x._2.product, 1))
-       .reduceByKey(_+_)
-       .map(x=> (x._2, x._1))
-       .map(x=> (x._2, x._1))
-       .leftOuterJoin(moviesRDD)
-       .sortByKey(true,2)
-       .take(10)
-       .foreach(println)
-    
-    
+    /*
+     ratings.
+       map( x => (x._2.product, 1)).
+       reduceByKey(_+_).
+       leftOuterJoin(moviesRDD).
+       sortByKey(true,2).
+       take(10).
+       foreach(println)*/
+   /*
+     ratings.
+       map( x => ((x._2.product),(x._2.rating, 1)  ) ).
+       reduceByKey( (x,y) =>  ( x._1 + y._1  , x._2 + y._2 )      
+       ).leftOuterJoin(moviesRDD).take(10).foreach(println)
+       
+       ratings.
+       map( x => ((x._2.product),(x._2.rating, 1)  ) ).
+       reduceByKey( (x,y) =>  ( x._1 + y._1  , x._2 + y._2 )      
+       ).map(x => (x._1, x._2._1/x._2._2, x._2._2 )).take(10).foreach(println)   */  
+       /* get top 100 among movies with more than 500 votes*/
+       ratings.
+         map( x => ((x._2.product),(x._2.rating, 1)  ) ).
+         reduceByKey( (x,y) =>  ( x._1 + y._1  , x._2 + y._2 ) ).
+         map(x => (x._1, (x._2._1/x._2._2, x._2._2) )).
+         leftOuterJoin(moviesRDD).
+         map(x => (x._2._1._1, (x._1, x._2._1._1, x._2._1._2, x._2._2) ) ).
+         sortByKey(false,2).
+         filter(x => x._2._3>500). /* collect ? */
+         take(100).foreach(println)          
+  
 
 
   }
