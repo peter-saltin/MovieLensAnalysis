@@ -11,7 +11,9 @@ object MovieLensAnalysis {
 
   def main(args: Array[String]) {
 
-    val conf = new SparkConf().setAppName("Movielens Analysis")
+    val conf = new SparkConf()
+      .setAppName("Movielens Analysis")
+      .set("spark.executor.memory", "6g")
     val sc = new SparkContext(conf)
     val hadoopConf=sc.hadoopConfiguration
     hadoopConf.set("fs.s3.impl", "org.apache.hadoop.fs.s3native.NativeS3FileSystem")
