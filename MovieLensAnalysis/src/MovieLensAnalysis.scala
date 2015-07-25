@@ -22,6 +22,26 @@ object MovieLensAnalysis {
     val dataFile = sc.textFile(pathFile, 2).cache()
     println(dataFile.count() + " <-- number of ratings")
     println("----------------------")
+    
+    val ratings = sc.textFile(movieLensHomeDir + "/ratings.dat").map { line =>
+    val fields = line.split("::")
+    // format: (timestamp % 10, Rating(userId, movieId, rating))
+      (fields(3).toLong % 10, Rating(fields(0).toInt, fields(1).toInt, fields(2).toDouble))
+    }
+    
+     //create rdd of movies for easy join with ratings
+    val moviesRDD = sc.textFile(movieLensHomeDir + "/movies.dat").map { line =>
+    val fields = line.split("::")
+    // format: (movieId, movieName)
+        (fields(0).toInt, fields(1))
+      }
+      
+     //take 10
+     ratings.map( x => (x._2.product, 1)).reduceByKey(_+_).map(x=> (x._2, x._1)).map(x=> (x._2, x._1)).leftOuterJoin(moviesRDD).sortByKey(true,2).take(10).foreach(println)
+    
+    
+
+
   }
 }
 
