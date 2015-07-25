@@ -43,25 +43,7 @@ object MovieLensAnalysis {
         (fields(0).toInt, fields(1))
       }
       
-     //take 10
-    /*
-     ratings.
-       map( x => (x._2.product, 1)).
-       reduceByKey(_+_).
-       leftOuterJoin(moviesRDD).
-       sortByKey(true,2).
-       take(10).
-       foreach(println)*/
-   /*
-     ratings.
-       map( x => ((x._2.product),(x._2.rating, 1)  ) ).
-       reduceByKey( (x,y) =>  ( x._1 + y._1  , x._2 + y._2 )      
-       ).leftOuterJoin(moviesRDD).take(10).foreach(println)
-       
-       ratings.
-       map( x => ((x._2.product),(x._2.rating, 1)  ) ).
-       reduceByKey( (x,y) =>  ( x._1 + y._1  , x._2 + y._2 )      
-       ).map(x => (x._1, x._2._1/x._2._2, x._2._2 )).take(10).foreach(println)   */  
+
        /* get top 100 among movies with more than 500 votes*/
        ratings.
          map( x => ((x._2.product),(x._2.rating, 1)  ) ).
