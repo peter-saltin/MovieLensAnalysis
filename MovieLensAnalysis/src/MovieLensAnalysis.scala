@@ -14,7 +14,7 @@ object MovieLensAnalysis {
     val hadoopConf=sc.hadoopConfiguration
       .set("fs.s3.impl", "org.apache.hadoop.fs.s3native.NativeS3FileSystem")
       .set("fs.s3n.awsAccessKeyId",sys.env("AWS_ACCESS_KEY_ID"))
-      .set("fs.s3n.awsSecretAccessKey",sys.env("AWS_SECRET_ACCESS_KEY"))
+      .set("fs.s3n.awsSecretAccessKey",sys.env("AWS_SECRET_ACCESS_KEY"));
     
 
 
