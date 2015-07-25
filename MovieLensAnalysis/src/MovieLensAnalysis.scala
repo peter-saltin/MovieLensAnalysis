@@ -3,7 +3,7 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
 
 /**
- * @author peter saltin
+ * @author peter saltin 
  */
 object MovieLensAnalysis {
 
