@@ -9,7 +9,7 @@ object MovieLensAnalysis {
 
   def main(args: Array[String]) {
 
-    val conf = new SparkConf().setAppName("Simple S3 Data Application")
+    val conf = new SparkConf().setAppName("Movielens Analysis")
     val sc = new SparkContext(conf)
     val hadoopConf=sc.hadoopConfiguration;
     hadoopConf.set("fs.s3.impl", "org.apache.hadoop.fs.s3native.NativeS3FileSystem")
