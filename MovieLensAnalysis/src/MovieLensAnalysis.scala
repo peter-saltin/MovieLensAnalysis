@@ -30,14 +30,14 @@ object MovieLensAnalysis {
     println(dataFile.count() + " <-- number of ratings")
     println("----------------------")
     val movieLensHomeDir = "s3n://saltin1/input/ampcamp/movielens/large"
-    val ratings = sc.textFile(movieLensHomeDir + "/ratings.dat").map { line =>
+    val ratings = sc.textFile(movieLensHomeDir + "/ratings.dat").cache.map { line =>
     val fields = line.split("::")
     // format: (timestamp % 10, Rating(userId, movieId, rating))
       (fields(3).toLong % 10, Rating(fields(0).toInt, fields(1).toInt, fields(2).toDouble))
     }
     
      //create rdd of movies for easy join with ratings
-    val moviesRDD = sc.textFile(movieLensHomeDir + "/movies.dat").map { line =>
+    val moviesRDD = sc.textFile(movieLensHomeDir + "/movies.dat").cache.map { line =>
     val fields = line.split("::")
     // format: (movieId, movieName)
         (fields(0).toInt, fields(1))
