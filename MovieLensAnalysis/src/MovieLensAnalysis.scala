@@ -42,38 +42,44 @@ object MovieLensAnalysis {
     // format: (movieId, movieName)
         (fields(0).toInt, fields(1))
       }
+    
+    val movies = sc.textFile(movieLensHomeDir + "/movies.dat").map { line =>
+      val fields = line.split("::")
+      // format: (movieId, movieName)
+      (fields(0).toInt, fields(1))
+    }.collect.toMap
       
+    topX(ratings,movies,1000,10)
+    
 
-       /* get top 100 among movies with more than 500 votes*/
-    /*
-       ratings.
-         map( x => ((x._2.product),(x._2.rating, 1)  ) ).
-         reduceByKey( (x,y) =>  ( x._1 + y._1  , x._2 + y._2 ) ).
-         map(x => (x._1, (x._2._1/x._2._2, x._2._2) )).
-         leftOuterJoin(moviesRDD).
-         map(x => (x._2._1._1, (x._1, x._2._1._1, x._2._1._2, x._2._2) ) ).
-         sortByKey(false,2).
-         filter(x => x._2._3>500). /* collect ? */
-         map(x => x._2).
-         take(100).foreach(println)          */
-    top100(ratings, moviesRDD)
-  
-
+    /* take top 50 most rated movies *//*
+    ratings.
+    map(x => ((x._2.product), (x._2.rating, 1) )    ).
+    reduceByKey((x,y) => (x._1+y._1, x._2 + y._2)).
+    map(x => (x._2._1/x._2._2, (x._1, x._2._1/x._2._2, x._2._2, movies(x._1) )  )).
+    sortByKey(false,8).
+    filter(x => x._2._3 > 1000).
+    take(100).foreach(println) */
   }
-  
-  def top100(dataRatings: RDD[(Long, Rating)], movieNames: RDD[(Int, String)]) = {
-     dataRatings.
-     map( x => ((x._2.product),(x._2.rating, 1)  ) ).
-     reduceByKey( (x,y) =>  ( x._1 + y._1  , x._2 + y._2 ) ).
-     map(x => (x._1, (x._2._1/x._2._2, x._2._2) )).
-     leftOuterJoin(movieNames).
-     map(x => (x._2._1._1, (x._1, x._2._1._1, x._2._1._2, x._2._2) ) ).
-     sortByKey(false,2).
-     filter(x => x._2._3>500). /* collect ? */
-     map(x => x._2).
-     take(100).foreach(println)     
+  /* topX(ratings,movies,1000,10)
+   */
+  def topX(
+      dataRatings: RDD[(Long, Rating)], 
+      movies: Map[Int,String],
+      minViews: Int,
+      numMovies: Int
+    ) : RDD[(Double, (Int, Double, Int, String))]
+    = {
+    val filtered = dataRatings.
+    map(x => ((x._2.product), (x._2.rating, 1) )    ).
+    reduceByKey((x,y) => (x._1+y._1, x._2 + y._2)).
+    map(x => (x._2._1/x._2._2, (x._1, x._2._1/x._2._2, x._2._2, movies(x._1) )  )).
+    sortByKey(false,8).
+    filter(x => x._2._3 >= minViews)
+    filtered.take(numMovies).foreach( x => println(s"movie: ${x._2._4} \t\t rating: ${x._2._2} \t votes: ${x._2._3}" ))
+    return filtered
   }
-  
+     
   /** Compute RMSE (Root Mean Squared Error). */
   def computeRmse(model: MatrixFactorizationModel, data: RDD[Rating], n: Long) = {
     val predictions: RDD[Rating] = model.predict(data.map(x => (x.user, x.product)))
