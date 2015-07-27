@@ -4,6 +4,7 @@ import org.apache.spark.SparkConf
 import org.apache.spark.rdd._
 import org.apache.spark.mllib.recommendation.{ALS, Rating, MatrixFactorizationModel}
 import scala.io.Source
+import java.util.Random
 
 /**
  * @author peter saltin 
@@ -49,34 +50,40 @@ object MovieLensAnalysis {
       (fields(0).toInt, fields(1))
     }.collect.toMap
       
-    topX(ratings,movies,1000,10)
-    
+    //topX(ratings,movies,1000,10)
+    //select 10 movies from top numMovies*10
+    topX(ratings,movies,1000,10,0.5).foreach(println)
 
-    /* take top 50 most rated movies *//*
-    ratings.
-    map(x => ((x._2.product), (x._2.rating, 1) )    ).
-    reduceByKey((x,y) => (x._1+y._1, x._2 + y._2)).
-    map(x => (x._2._1/x._2._2, (x._1, x._2._1/x._2._2, x._2._2, movies(x._1) )  )).
-    sortByKey(false,8).
-    filter(x => x._2._3 > 1000).
-    take(100).foreach(println) */
   }
-  /* topX(ratings,movies,1000,10)
+  /* 
+   * topX(ratings,movies,1000,10).foreach(println)
+   * topX(ratings,movies,1000,10,0.5).foreach(println)
    */
   def topX(
       dataRatings: RDD[(Long, Rating)], 
       movies: Map[Int,String],
       minViews: Int,
-      numMovies: Int
-    ) : RDD[(Double, (Int, Double, Int, String))]
+      numMovies: Int,
+      getProportion: Double = 1
+    ) : Array[(Double, (Int, Double, Int, String))] 
     = {
-    val filtered = dataRatings.
-    map(x => ((x._2.product), (x._2.rating, 1) )    ).
-    reduceByKey((x,y) => (x._1+y._1, x._2 + y._2)).
-    map(x => (x._2._1/x._2._2, (x._1, x._2._1/x._2._2, x._2._2, movies(x._1) )  )).
-    sortByKey(false,8).
-    filter(x => x._2._3 >= minViews)
-    filtered.take(numMovies).foreach( x => println(s"movie: ${x._2._4} \t\t rating: ${x._2._2} \t votes: ${x._2._3}" ))
+    
+    val reducedRatings = dataRatings.
+      map(x => ((x._2.product), (x._2.rating, 1) )    ).
+      reduceByKey((x,y) => (x._1+y._1, x._2 + y._2)).
+      map(x => (x._2._1/x._2._2, (x._1, x._2._1/x._2._2, x._2._2, movies(x._1) )  )).
+      sortByKey(false,8)     
+    val random = new Random()
+    val filtered/*: RDD[(Double, (Int, Double, Int, String))]*/ = 
+      if (0 < getProportion && getProportion < 1) 
+          reducedRatings.take(numMovies*10). /* take 10 times the size than requested */
+          filter(x => x._2._3 >= 500 && random.nextDouble() <= getProportion ). /* get random movies, biased towards better rated ones due to take(x) */
+          take(numMovies)
+      else 
+        reducedRatings.filter(x => x._2._3 >= minViews).take(numMovies) 
+
+    filtered.foreach( x => println(s"movie: ${x._2._4} \t\t rating: ${x._2._2} \t votes: ${x._2._3}" ))
+    
     return filtered
   }
      
