@@ -52,7 +52,7 @@ object MovieLensAnalysis {
       
     //topX(ratings,movies,1000,10)
     //select 10 movies from top numMovies*10
-    val selectedMovies = topX(ratings,movies,500,40,0.5).map(x => (x._2._1, x._2._4)).toSeq
+    val selectedMovies = topX(ratings,movies,500,60,0.5).map(x => (x._2._1, x._2._4)).toSeq
 
     val myRatings = elicitateRatings(selectedMovies)
     val myRatingsRDD = sc.parallelize(myRatings)
