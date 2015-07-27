@@ -45,6 +45,7 @@ object MovieLensAnalysis {
       
 
        /* get top 100 among movies with more than 500 votes*/
+    /*
        ratings.
          map( x => ((x._2.product),(x._2.rating, 1)  ) ).
          reduceByKey( (x,y) =>  ( x._1 + y._1  , x._2 + y._2 ) ).
@@ -54,9 +55,23 @@ object MovieLensAnalysis {
          sortByKey(false,2).
          filter(x => x._2._3>500). /* collect ? */
          map(x => x._2).
-         take(100).foreach(println)          
+         take(100).foreach(println)          */
+    top100(ratings, moviesRDD)
   
 
+  }
+  
+  def top100(dataRatings: RDD[Rating], movieNames: RDD[Rating]) = {
+     dataRatings.
+     map( x => ((x._2.product),(x._2.rating, 1)  ) ).
+     reduceByKey( (x,y) =>  ( x._1 + y._1  , x._2 + y._2 ) ).
+     map(x => (x._1, (x._2._1/x._2._2, x._2._2) )).
+     leftOuterJoin(movieNames).
+     map(x => (x._2._1._1, (x._1, x._2._1._1, x._2._1._2, x._2._2) ) ).
+     sortByKey(false,2).
+     filter(x => x._2._3>500). /* collect ? */
+     map(x => x._2).
+     take(100).foreach(println)     
   }
   
   /** Compute RMSE (Root Mean Squared Error). */
