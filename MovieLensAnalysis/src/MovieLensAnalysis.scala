@@ -52,7 +52,8 @@ object MovieLensAnalysis {
       
     //topX(ratings,movies,1000,10)
     //select 10 movies from top numMovies*10
-    topX(ratings,movies,1000,10,0.5).foreach(println)
+    val selectedMovies = topX(ratings,movies,1000,10,0.5).map(x => (x._2._1, x._2._4)).toSeq
+
 
   }
   /* 
