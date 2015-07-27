@@ -52,7 +52,7 @@ object MovieLensAnalysis {
       
     //topX(ratings,movies,1000,10)
     //select 10 movies from top numMovies*10
-    val selectedMovies = topX(ratings,movies,1000,10,0.5).map(x => (x._2._1, x._2._4)).toSeq
+    val selectedMovies = topX(ratings,movies,1000,20,0.5).map(x => (x._2._1, x._2._4)).toSeq
 
     val myRatings = elicitateRatings(selectedMovies)
     val myRatingsRDD = sc.parallelize(myRatings)
@@ -100,6 +100,23 @@ object MovieLensAnalysis {
 
     println("The best model was trained with rank = " + bestRank + " and lambda = " + bestLambda
       + ", and numIter = " + bestNumIter + ", and its RMSE on the test set is " + testRmse + ".")
+      
+      
+      
+    val myRatedMovieIds = myRatings.map(_.product).toSet
+    val candidates = sc.parallelize(movies.keys.filter(!myRatedMovieIds.contains(_)).toSeq)
+    val recommendations = bestModel.get
+                                   .predict(candidates.map((0, _)))
+                                   .collect
+                                   .sortBy(-_.rating)
+                                   .take(50)
+
+    var i = 1
+    println("Movies recommended for you:")
+    recommendations.foreach { r =>
+      println("%2d".format(i) + ": " + movies(r.product))
+      i += 1
+    }
   }
   /* 
    * topX(ratings,movies,1000,10).foreach(println)
