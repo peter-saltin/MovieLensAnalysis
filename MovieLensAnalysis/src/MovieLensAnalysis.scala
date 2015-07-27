@@ -57,7 +57,50 @@ object MovieLensAnalysis {
          take(100).foreach(println)          
   
 
-
+  }
+  
+  /** Compute RMSE (Root Mean Squared Error). */
+  def computeRmse(model: MatrixFactorizationModel, data: RDD[Rating], n: Long) = {
+    val predictions: RDD[Rating] = model.predict(data.map(x => (x.user, x.product)))
+    val predictionsAndRatings = predictions.map(x => ((x.user, x.product), x.rating))
+                                           .join(data.map(x => ((x.user, x.product), x.rating)))
+                                           .values
+    math.sqrt(predictionsAndRatings.map(x => (x._1 - x._2) * (x._1 - x._2)).reduce(_ + _) / n)
+  }
+  
+  /** Elicitate ratings from command-line. */
+  def elicitateRatings(movies: Seq[(Int, String)]) = {
+    val prompt = "Please rate the following movie (1-5 (best), or 0 if not seen):"
+    println(prompt)
+    val ratings = movies.flatMap { x =>
+      var rating: Option[Rating] = None
+      var valid = false
+      while (!valid) {
+        print(x._2 + ": ")
+        try {
+          val r = Console.readInt
+          if (r < 0 || r > 5) {
+            println(prompt)
+          } else {
+            valid = true
+            if (r > 0) {
+              rating = Some(Rating(0, x._1, r))
+            }
+          }
+        } catch {
+          case e: Exception => println(prompt)
+        }
+      }
+      rating match {
+        case Some(r) => Iterator(r)
+        case None => Iterator.empty
+      }
+    }
+    if(ratings.isEmpty) {
+      error("No rating provided!")
+    } else {
+      ratings
+    }
   }
 }
 
