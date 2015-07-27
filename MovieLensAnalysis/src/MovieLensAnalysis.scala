@@ -54,7 +54,52 @@ object MovieLensAnalysis {
     //select 10 movies from top numMovies*10
     val selectedMovies = topX(ratings,movies,1000,10,0.5).map(x => (x._2._1, x._2._4)).toSeq
 
+    val myRatings = elicitateRatings(selectedMovies)
+    val myRatingsRDD = sc.parallelize(myRatings)
+    val numPartitions = 20
+    val training = ratings.filter(x => x._1 < 6)
+                          .values
+                          .union(myRatingsRDD)
+                          .repartition(numPartitions)
+                          .persist
+    val validation = ratings.filter(x => x._1 >= 6 && x._1 < 8)
+                            .values
+                            .repartition(numPartitions)
+                            .persist
+    val test = ratings.filter(x => x._1 >= 8).values.persist
 
+    val numTraining = training.count
+    val numValidation = validation.count
+    val numTest = test.count
+
+    println("Training: " + numTraining + ", validation: " + numValidation + ", test: " + numTest)
+    
+    val ranks = List(8, 12)
+    val lambdas = List(0.1, 10.0)
+    val numIters = List(10, 20)
+    var bestModel: Option[MatrixFactorizationModel] = None
+    var bestValidationRmse = Double.MaxValue
+    var bestRank = 0
+    var bestLambda = -1.0
+    var bestNumIter = -1
+    for (rank <- ranks; lambda <- lambdas; numIter <- numIters) {
+      val model = ALS.train(training, rank, numIter, lambda)
+      val validationRmse = computeRmse(model, validation, numValidation)
+      println("RMSE (validation) = " + validationRmse + " for the model trained with rank = "
+        + rank + ", lambda = " + lambda + ", and numIter = " + numIter + ".")
+      if (validationRmse < bestValidationRmse) {
+        bestModel = Some(model)
+        bestValidationRmse = validationRmse
+        bestRank = rank
+        bestLambda = lambda
+        bestNumIter = numIter
+      }
+    }
+
+    val testRmse = computeRmse(bestModel.get, test, numTest)
+
+    println("The best model was trained with rank = " + bestRank + " and lambda = " + bestLambda
+      + ", and numIter = " + bestNumIter + ", and its RMSE on the test set is " + testRmse + ".")
   }
   /* 
    * topX(ratings,movies,1000,10).foreach(println)
