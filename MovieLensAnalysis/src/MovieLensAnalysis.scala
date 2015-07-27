@@ -61,7 +61,7 @@ object MovieLensAnalysis {
 
   }
   
-  def top100(dataRatings: Any, movieNames: Any) = {
+  def top100(dataRatings: AnyRef, movieNames: AnyRef) = {
      dataRatings.
      map( x => ((x._2.product),(x._2.rating, 1)  ) ).
      reduceByKey( (x,y) =>  ( x._1 + y._1  , x._2 + y._2 ) ).
