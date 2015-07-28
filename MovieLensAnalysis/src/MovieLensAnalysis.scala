@@ -50,10 +50,22 @@ object MovieLensAnalysis {
       (fields(0).toInt, fields(1))
     }.collect.toMap
       
+ 
     //topX(ratings,movies,1000,10)
     //select 10 movies from top numMovies*10
-    val selectedMovies = topX(ratings,movies,500,60,0.5).map(x => (x._2._1, x._2._4)).toSeq
-
+    //should get better results by selecting more modern movies and movies with a lot of variaton?
+    //val selectedMovies = topX(ratings,movies,500,60,0.5).map(x => (x._2._1, x._2._4)).toSeq
+    val mostRatedMovieIds = ratings.map(_._2.product) // extract movie ids
+                                   .countByValue      // count ratings per movie
+                                   .toSeq             // convert map to Seq
+                                   .sortBy(- _._2)    // sort by rating count
+                                   .take(50)          // take 50 most rated
+                                   .map(_._1)         // get their ids
+    val random = new Random(0)
+    val selectedMovies = mostRatedMovieIds.filter(x => random.nextDouble() < 0.5)
+                                          .map(x => (x, movies(x)))
+                                          .toSeq
+                                          
     val myRatings = elicitateRatings(selectedMovies)
     val myRatingsRDD = sc.parallelize(myRatings)
     val numPartitions = 20
